@@ -26,9 +26,25 @@ const piece2Symbol = new Map<PieceTypeWithBlank,string>([
   ["p","♟︎"],
 ]);
 
+const piece2Color = new Map<PieceTypeWithBlank,string>([
+  ["K","white"],
+  ["Q","white"],
+  ["R","white"],
+  ["B","white"],
+  ["N","white"],
+  ["P","white"],
+  ["_",""],
+  ["k","black"],
+  ["q","black"],
+  ["r","black"],
+  ["b","black"],
+  ["n","black"],
+  ["p","black"],
+]);
+
 class Piece extends React.Component<IPieceProps> {
   render(){
-    return (<td className="Piece noselect">{piece2Symbol.get(this.props.type)}</td>);
+    return (<td className={`Piece noselect ${piece2Color.get(this.props.type)}`}>{piece2Symbol.get(this.props.type)}</td>);
   }
 }
 

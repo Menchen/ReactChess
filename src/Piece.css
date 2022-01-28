@@ -2,6 +2,12 @@ td.Piece{
   width: 9vmin;
   height: 9vmin;
   font-size: 8vmin;
+}
+td.Piece.black {
+  color: black;
+}
+
+td.Piece.white {
   color: white;
 }
 
@@ -15,10 +21,16 @@ td.Piece{
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 tr.odd td.Piece:nth-child(2n) {
-  background-color: lightgrey;
+  background-color: lightsteelblue;
 }
 tr.even td.Piece:nth-child(2n+1) {
-  background-color: lightgrey;
+  background-color: lightsteelblue;
+}
+tr.odd td.Piece:nth-child(2n+1) {
+  background-color: midnightblue;
+}
+tr.even td.Piece:nth-child(2n) {
+  background-color: midnightblue;
 }
 /* td.Piece:nth-child(2n+1) { */
 /*   background-color: lightgrey; */
