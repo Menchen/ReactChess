@@ -9,6 +9,9 @@ type PieceTypeWithBlank = PieceType | "_";
 interface IPieceProps{
 // Forsyth–Edwards Notation
   type:PieceTypeWithBlank;
+  callback?:(index:number)=>void;
+  index:number;
+  hightlight:boolean;
 }
 const piece2Symbol = new Map<PieceTypeWithBlank,string>([
   ["K","♔"],
@@ -44,7 +47,16 @@ const piece2Color = new Map<PieceTypeWithBlank,string>([
 
 class Piece extends React.Component<IPieceProps> {
   render(){
-    return (<td className={`Piece noselect ${piece2Color.get(this.props.type)}`}>{piece2Symbol.get(this.props.type)}</td>);
+    return (
+      <td 
+        className={`Piece noselect ${this.props.hightlight?"highlight":""} ${piece2Color.get(this.props.type)}`}
+        style={this.props.hightlight? {backgroundColor:'aquamarine'}:{}}
+        key={this.props.index}
+        onClick={_=>{if(this.props.callback) this.props?.callback(this.props.index)}}
+        >
+        {piece2Symbol.get(this.props.type)}
+      </td>
+    );
   }
 }
 
