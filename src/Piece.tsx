@@ -20,7 +20,7 @@ const piece2Symbol = new Map<PieceTypeWithBlank,string>([
   ["B","♗"],
   ["N","♘"],
   ["P","♙"],
-  ["_"," "],
+  ["_","　"],
   ["k","♚"],
   ["q","♛"],
   ["r","♜"],
