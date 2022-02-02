@@ -1,21 +1,45 @@
-import {PieceTypeWithBlank} from "./Piece";
+import {PieceType, PieceTypeWithBlank} from "./Piece";
 export const rowSize = 8;
 export const boardSize = rowSize**2;
 
 export interface IMove {
     from:number;
     to:number;
+    doubleStep?:boolean;
+    enPassant?:number;
+    promote?:PieceType;
 }
 
 export interface IGridInfo {
     type: PieceTypeWithBlank;
     highlight: boolean;
+    moved?:boolean;
+    lastMovementWasDoubleStep?:boolean;
+
 }
+
 export function applyMovement(pieces:IGridInfo[],move:IMove){
-    let copy : IGridInfo[] = JSON.parse(JSON.stringify(pieces));
+    // let copy : IGridInfo[] = JSON.parse(JSON.stringify(pieces));
+    let copy : IGridInfo[] = clonePieceMap(pieces);
     copy[move.to] = copy[move.from];
+    copy[move.to].moved = true;
+    copy[move.to].lastMovementWasDoubleStep = move.doubleStep;
+    if (move.promote){
+        copy[move.to].type = move.promote;
+    }
+    if (move.enPassant){
+        copy[move.enPassant] = {type:"_",highlight:false};
+    }
     copy[move.from] = {type:"_",highlight:false};
     return copy;
+}
+
+function clonePieceMap(pieces:IGridInfo[]){
+    let clone = new Array<IGridInfo>(boardSize);
+    pieces.forEach((value, index) => {
+        clone[index]={type:value.type,highlight:value.highlight,moved:value.moved}
+    })
+    return clone;
 }
 
 export function attemptMovePiece(pieces:IGridInfo[],index:number){
@@ -115,32 +139,60 @@ export function generateKnightMove(pieces:IGridInfo[],index:number){
     });
     return moveSet;
 }
+function generatePawnPromotion(from:number,to:number,isWhite:boolean,moveSet:Set<IMove>){
+    moveSet.add({from:from,to:to,promote:isWhite ? "N":"n"})
+    moveSet.add({from:from,to:to,promote:isWhite ? "Q":"q"})
+}
 
 export function generatePawnMove(pieces:IGridInfo[],index:number){
     let moveSet = new Set<IMove>();
+
+    // let x = index%rowSize;
+    let y = Math.floor(index/rowSize);
+
+    let promoteRank = isWhite(pieces[index]) ? 0 : rowSize-1;
     let dir = isWhite(pieces[index]) ? -1 : 1;
 
-    let frontTarget = index+8*dir;
+    let frontTarget = index+rowSize*dir;
     if (isValidIndex(frontTarget) && isEmpty(pieces[frontTarget])){
-        moveSet.add({from:index,to:frontTarget});
-    }
-    let sideCapture = [index+9*dir,index+7*dir];
-
-    sideCapture.filter(value => {
-        // return true;
-        return Math.abs(Math.floor(value/rowSize)-Math.floor(index/rowSize)) === 1
-            &&isValidIndex(value)&&!isEmpty(pieces[value]) && isDifferentColor(pieces[index],pieces[value]);
-    }).forEach( value => {
-        moveSet.add({from: index, to: value});
-    });
-
-    if (Math.floor(index/rowSize) === (isWhite(pieces[index]) ? 6 : 1)){
-        let doubleFordward = index+8*dir*2;
-        if (isEmpty(pieces[frontTarget])&&isEmpty(pieces[doubleFordward])){
-            moveSet.add({from: index, to: doubleFordward});
+        if (y+dir === promoteRank){
+            // Promote to queen and knight;
+            generatePawnPromotion(index,frontTarget,isWhite(pieces[index]),moveSet);
+        }else {
+            moveSet.add({from:index,to:frontTarget});
         }
     }
+    let sideCapture = [index+(rowSize+1)*dir,index+(rowSize-1)*dir];
 
+    sideCapture.forEach(value => {
+        // let target_x = value%rowSize;
+        let target_y = Math.floor(value/rowSize);
+
+        if(Math.abs(target_y - y) !== 1 ||!isValidIndex(value)){
+            return; // Wrong index, edge pawn;
+        }
+
+        let enPassantIndex = value-rowSize*dir;
+        let enPassantCheck = isDifferentColor(pieces[index],pieces[enPassantIndex]) && pieces[enPassantIndex].lastMovementWasDoubleStep;
+
+        if (enPassantCheck){
+            moveSet.add({from: index, to: value,enPassant:enPassantIndex});
+        }else if (isDifferentColor(pieces[index],pieces[value])) {
+            if (target_y === promoteRank){
+                generatePawnPromotion(index,value,isWhite(pieces[index]),moveSet);
+            }else {
+                moveSet.add({from: index, to: value});
+            }
+        }
+    });
+
+    // if (Math.floor(index/rowSize) === (isWhite(pieces[index]) ? 6 : 1)){
+    if (!pieces[index].moved){
+        let doubleFordward = index+8*dir*2;
+        if (isEmpty(pieces[frontTarget])&&isEmpty(pieces[doubleFordward])){
+            moveSet.add({from: index, to: doubleFordward,doubleStep:true});
+        }
+    }
     return moveSet;
 }
 
@@ -153,16 +205,14 @@ export function generateSlideMove(pieces:IGridInfo[],index:number){
         for (let i = 1; i <= edgeDistanceMap[index][dir];i++){
             let targetIndex = index+i*directionOffset[dir];
 
-            if (isEmpty(pieces[targetIndex])){
-                moveSet.add({from:index,to:targetIndex});
-            }else {
-                if (isDifferentColor(pieces[index],pieces[targetIndex])){
-                    moveSet.add({from:index,to:targetIndex});
-                }
-                break;
+            if (isEmpty(pieces[targetIndex])) {
+                moveSet.add({from: index, to: targetIndex});
+                continue;
             }
-
-
+            if (isDifferentColor(pieces[index],pieces[targetIndex])){
+                moveSet.add({from:index,to:targetIndex});
+            }
+            break;
         }
     }
     return moveSet;
@@ -202,7 +252,7 @@ export function isSameColor(a:IGridInfo, b:IGridInfo){
 }
 
 export function isDifferentColor(a:IGridInfo, b:IGridInfo){
-    return (!(isWhite(a) && isWhite(b)))&&(!isEmpty(a)&&!isEmpty(b));
+    return ((isWhite(a) && isBlack(b))||(isBlack(a) && isWhite(b)))&&(!isEmpty(a)&&!isEmpty(b));
 }
 
 export function isValidIndex(i:number){
