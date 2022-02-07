@@ -1,6 +1,9 @@
 ### ReactChess
 An simple chess game implemented using react+css with typescript.
 
+
+[Live demo](https://menchen.github.io/ReactChess/)
+
 #### Feature:
 
 - [x] Basic FEN string parsing
@@ -11,6 +14,9 @@ An simple chess game implemented using react+css with typescript.
 - [ ] Castling
 - [ ] Timer
 - [ ] Load game using FEN string
+- [ ] Check
+- [ ] Checkmate
+
 
 
 
