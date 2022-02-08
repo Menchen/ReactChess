@@ -1,5 +1,5 @@
 ### ReactChess
-An simple chess game implemented using react+css with typescript.
+A simple chess game implemented using react+css with typescript.
 
 
 [Live demo](https://menchen.github.io/ReactChess/)
